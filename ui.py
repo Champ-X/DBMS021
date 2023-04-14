@@ -540,7 +540,6 @@ class MyWidget(QWidget):
         self.dyn_sql = f'select {cols} \n' \
                        f'from {self.tables_name[1]} as t1, {self.tables_name[2]} as t2, {self.tables_name[3]} as t3 \n' \
                        f'where '
-        print(cols)
         # 获得每个表的每一列的类型
         tables_cols_type = {1: {}, 2: {}, 3: {}}
         for idx in self.tables_name:
@@ -555,7 +554,6 @@ class MyWidget(QWidget):
                         tables_cols_type[idx][each[0]] = 'float'
             else:
                 print(table_cols_info)
-        print(self.conditions_dict)
         for idx in range(1, 4):
             for col in self.conditions_dict[idx]:
                 if tables_cols_type[idx][col] == 'chars':

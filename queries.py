@@ -18,6 +18,7 @@ def query(query_sql: str, db=''):
     if db:
         conn.select_db(db)
     victory = True
+    cols_name = ()
     query_res = []
     errInfo = ''
     try:
@@ -32,23 +33,30 @@ def query(query_sql: str, db=''):
             #     row = cursor.fetchone()
             # 4.2 通过游标对象抓取数据(一次性)
             query_res = cursor.fetchall()
+            cols_name = cursor.description
             victory = True
     except pymysql.MySQLError as err:
-        # print(str(err))
         errInfo = 'ERROR' + str(err)
+        cols_name = ()
         victory = False
     finally:
         # 5. 关闭连接释放资源
         conn.close()
         if victory:
-            return victory, query_res
+            return victory, cols_name, query_res
         else:
-            return victory, errInfo
+            return victory, cols_name, errInfo
 
 
 if __name__ == '__main__':
-    res1 = query(query1)
-    [print(line) for line in res1]
-    res2 = query(query2)
-    [print(line) for line in res2]
+    # _, cols1, res1 = query(query1, 'sct')
+    # print(cols1)
+    # print(res1)
+    # _, cols2, res2 = query(query2, 'sct')
+    # print(cols2)
+    # print(res2)
+    _, cols3, res3 = query('show tables', 'sct')
+    print(cols3)
+    print(res3)
+
 

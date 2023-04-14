@@ -26,7 +26,7 @@ class MyWidget(QWidget):
         self.db_select_label.setStyleSheet(self.getLabelButtonStyle('14px', '#281714', '#7397ab'))
         self.db_combobox = QComboBox()
         self.db_combobox.setStyleSheet(self.getComboboxStyle('#7397ab'))
-        OK, dbs = query('show databases')
+        OK, _, dbs = query('show databases')
         for db in dbs:
             self.db_combobox.addItem(db[0])
         self.db_combobox.currentTextChanged.connect(lambda: self.show_tables())
@@ -41,7 +41,7 @@ class MyWidget(QWidget):
         self.table1_load_layout = QHBoxLayout()
         self.table1_combobox = QComboBox()
         self.table1_combobox.setStyleSheet(self.getComboboxStyle('#86E7A2'))
-        _, tables = query('show tables', self.db_combobox.currentText())
+        _, _, tables = query('show tables', self.db_combobox.currentText())
         for table in tables:
             self.table1_combobox.addItem(table[0])
         self.table1_combobox.currentIndexChanged.connect(lambda: self.change_table_info(self.table1_load_bnt,
@@ -70,7 +70,7 @@ class MyWidget(QWidget):
         self.table2_load_layout = QHBoxLayout()
         self.table2_combobox = QComboBox()
         self.table2_combobox.setStyleSheet(self.getComboboxStyle('#FFA801'))
-        _, tables = query('show tables', self.db_combobox.currentText())
+        _, _, tables = query('show tables', self.db_combobox.currentText())
         for table in tables:
             self.table2_combobox.addItem(table[0])
         self.table2_combobox.currentIndexChanged.connect(lambda: self.change_table_info(self.table2_load_bnt,
@@ -99,7 +99,7 @@ class MyWidget(QWidget):
         self.table3_load_layout = QHBoxLayout()
         self.table3_combobox = QComboBox()
         self.table3_combobox.setStyleSheet(self.getComboboxStyle('#93BDFF'))
-        _, tables = query('show tables', self.db_combobox.currentText())
+        _, _, tables = query('show tables', self.db_combobox.currentText())
         for table in tables:
             self.table3_combobox.addItem(table[0])
         self.table3_combobox.currentIndexChanged.connect(lambda: self.change_table_info(self.table3_load_bnt,
@@ -318,7 +318,7 @@ class MyWidget(QWidget):
         condition_right_part = QVBoxLayout()
         con_layout.addLayout(condition_left_part)
         con_layout.addLayout(condition_right_part)
-        _, columns_data = query(f'show columns from {table_condition_combobox.currentText()}', f'{db}')
+        _, _, columns_data = query(f'show columns from {table_condition_combobox.currentText()}', f'{db}')
         cols = [col[0] for col in columns_data]
         for idx, col in enumerate(cols):
             con_layout = QHBoxLayout()
@@ -351,7 +351,7 @@ class MyWidget(QWidget):
         self.conditions_dict = {1: {}, 2: {}, 3: {}}  # 换库清空条件字典
         self.dyn_sql = ''  # 换库清楚动态查询语句
         self.show_running_status_info(Qt.blue, f'当前使用数据库{self.db_combobox.currentText()}。')
-        _, tables = query('show tables', self.db_combobox.currentText())
+        _, _, tables = query('show tables', self.db_combobox.currentText())
         self.table1_combobox.clear()
         self.table2_combobox.clear()
         self.table3_combobox.clear()
@@ -451,7 +451,7 @@ class MyWidget(QWidget):
 
     # 左侧三个表装载
     def load_table(self, db, table, cur_table_widget):
-        OK, table_data = query(f'select * from {table} limit 10000', f'{db}')
+        OK, _, table_data = query(f'select * from {table} limit 10000', f'{db}')
         if not OK:
             cur_table_widget.clearContents()
             self.info_text.setPlainText(table_data)
@@ -465,7 +465,7 @@ class MyWidget(QWidget):
             return
         cur_table_widget.setRowCount(num_rows)
         cur_table_widget.setColumnCount(num_cols)
-        _, columns_data = query(f'show columns from {table}', f'{db}')
+        _, _, columns_data = query(f'show columns from {table}', f'{db}')
         cols = [col[0] for col in columns_data]
         cur_table_widget.setHorizontalHeaderLabels(cols)
         for i in range(num_rows):
@@ -481,7 +481,7 @@ class MyWidget(QWidget):
         self.right_table_widget.setRowCount(0)
         self.right_table_widget.setColumnCount(0)
         text = self.sql_text.toPlainText()
-        OK, queryRes = query(text, f'{self.db_combobox.currentText()}')
+        OK, cols_name, queryRes = query(text, f'{self.db_combobox.currentText()}')
         if not OK:
             self.right_table_widget.clearContents()
             self.show_running_status_info(Qt.red, queryRes)
@@ -491,10 +491,12 @@ class MyWidget(QWidget):
             num_cols = len(queryRes[0])
         else:
             self.right_table_widget.clearContents()
-            self.show_running_status_info(Qt.blue,'查询结果为空！！！' )
+            self.show_running_status_info(Qt.blue, '查询结果为空！！！')
             return
         self.right_table_widget.setRowCount(num_rows)
         self.right_table_widget.setColumnCount(num_cols)
+        cols = [col[0] for col in cols_name]
+        self.right_table_widget.setHorizontalHeaderLabels(cols)
         for i in range(num_rows):
             for j in range(num_cols):
                 item = QTableWidgetItem(str(queryRes[i][j]))
@@ -527,7 +529,7 @@ class MyWidget(QWidget):
         # 获得每个表的每一列的类型
         tables_cols_type = {1: {}, 2: {}, 3: {}}
         for idx in self.tables_name:
-            OK, table_cols_info = query(f'describe {self.tables_name[idx]}', f'{self.db_combobox.currentText()}')
+            OK, _, table_cols_info = query(f'describe {self.tables_name[idx]}', f'{self.db_combobox.currentText()}')
             if OK:
                 for each in table_cols_info:
                     if each[1].startswith('char'):

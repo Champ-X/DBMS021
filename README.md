@@ -42,7 +42,8 @@ pip install pymysql
    <img src="images\gui.png" style="zoom: 50%;" />
 
    ## 待优化部分
-
+   
+   + [ ] 有不少代码复用且注释不够详细，阅读体验恶劣，基本是💩⛰
    + [ ] 整体美化
    + [ ] 输出的列名显示
    + [ ] 多表联合构造模式单一

@@ -92,10 +92,10 @@ def getCourse():
 def getSc():
     return sc_data
 
-def initDatabase():
+def initDatabase(db_name):
     # 1. 创建连接（Connection）
     conn = connectDatabase()
-    conn.select_db('sct')
+    conn.select_db(db_name)
     try:
         # 2. 获取游标对象（Cursor）
         with conn.cursor() as cursor:
@@ -121,4 +121,6 @@ def initDatabase():
 
 
 if __name__ == '__main__':
-    initDatabase()
+    database_name = 'sct'
+    initDatabase(database_name)
+

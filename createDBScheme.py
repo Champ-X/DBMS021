@@ -1,7 +1,8 @@
 from createConnect import *
 
-def create():
+def create(db_name):
     conn = connectDatabase()
+    conn.select_db(db_name)
     cursor = conn.cursor()
     try:
         cursor.execute(
@@ -18,5 +19,6 @@ def create():
 
 
 if __name__ == '__main__':
-    create()
+    database_name = 'sct'
+    create(database_name)
     

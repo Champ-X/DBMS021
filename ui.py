@@ -9,6 +9,7 @@ class MyWidget(QWidget):
         super().__init__()
 
         self.conditions_dict = {1: {}, 2: {}, 3: {}}  # 存储当前的所有条件
+        self.selected_cols = {1: [], 2: [], 3: []}  # 存储当前选择的所有列
         self.dyn_sql = ''
         self.tables_name = {1: '', 2: '', 3: ''}
         main_layout = QHBoxLayout()
@@ -311,6 +312,8 @@ class MyWidget(QWidget):
         self.tables_name[table_idx] = table_condition_combobox.currentText()
         del self.conditions_dict[table_idx]
         self.conditions_dict[table_idx] = {}
+        del self.selected_cols[table_idx]
+        self.selected_cols[table_idx] = []
         table_condition_layout.removeWidget(table_condition_layout.widget(1))
         con_widget = QWidget()
         con_layout = QHBoxLayout(con_widget)
@@ -349,6 +352,7 @@ class MyWidget(QWidget):
         当数据库切换后 根据当前数据库更新待选表以及条件选择部分
         """
         self.conditions_dict = {1: {}, 2: {}, 3: {}}  # 换库清空条件字典
+        self.selected_cols = {1: [], 2: [], 3: []}
         self.dyn_sql = ''  # 换库清楚动态查询语句
         self.show_running_status_info(Qt.blue, f'当前使用数据库{self.db_combobox.currentText()}。')
         _, _, tables = query('show tables', self.db_combobox.currentText())
@@ -508,13 +512,16 @@ class MyWidget(QWidget):
         col_key = col
         self.conditions_dict[table_idx][col_key] = ''
         if con_checkbox.isChecked():
+            if col not in self.selected_cols[table_idx]:
+                self.selected_cols[table_idx].append(col)
             con_text = con_edit.text()
             if con_text == '':
                 del self.conditions_dict[table_idx][col_key]
-                # self.conditions_dict[table_idx][col_key] = ''  # 如果想显示查询结果的行可以这样记录maybe??
             else:
                 self.conditions_dict[table_idx][col_key] = '\'' + con_text + '\''
         else:
+            if col in self.selected_cols[table_idx]:
+                self.selected_cols[table_idx].remove(col)
             del self.conditions_dict[table_idx][col_key]
 
     # 加载动态条件
@@ -522,17 +529,25 @@ class MyWidget(QWidget):
         """
         根据当前数据库和选择的table以及条件构造动态查询语句并显示在sql语句输入框
         """
-        self.dyn_sql = f'select * \n' \
+        cols = ''
+        for idx in self.selected_cols:
+            for col in self.selected_cols[idx]:
+                cols += f't{idx}.{col}, '
+        if cols.endswith(', '):
+            cols = cols[:-2]
+        elif cols == '':
+            cols = '*'
+        self.dyn_sql = f'select {cols} \n' \
                        f'from {self.tables_name[1]} as t1, {self.tables_name[2]} as t2, {self.tables_name[3]} as t3 \n' \
                        f'where '
-
+        print(cols)
         # 获得每个表的每一列的类型
         tables_cols_type = {1: {}, 2: {}, 3: {}}
         for idx in self.tables_name:
             OK, _, table_cols_info = query(f'describe {self.tables_name[idx]}', f'{self.db_combobox.currentText()}')
             if OK:
                 for each in table_cols_info:
-                    if each[1].startswith('char'):
+                    if each[1].startswith('char') or each[1].startswith('varchar'):
                         tables_cols_type[idx][each[0]] = 'chars'
                     if each[1].startswith('int'):
                         tables_cols_type[idx][each[0]] = 'int'
@@ -540,6 +555,7 @@ class MyWidget(QWidget):
                         tables_cols_type[idx][each[0]] = 'float'
             else:
                 print(table_cols_info)
+        print(self.conditions_dict)
         for idx in range(1, 4):
             for col in self.conditions_dict[idx]:
                 if tables_cols_type[idx][col] == 'chars':
